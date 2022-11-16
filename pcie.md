@@ -39,14 +39,72 @@ igb_pci_sriov_configure
 ->igb_pci_enable_sriov
 ->igb_enable_sriov
 
-#### 在/sys/class/*/sriov_numvfs文件里修改数值后，发生了啥？
-sys的用户属性接口 static DEVICE_ATTR_RW(sriov_numvfs)被触发，
-调用宏函数
+### 热插拔相关
+pci_rescan_bus(b)在pci hotplug中是很有用
+这个函数是在pci_driver_init这个函数内会有调用
 
+
+
+#### 在/sys/class/*/sriov_numvfs文件里修改数值后，发生了啥？
+
+sys文件系统属性操作方法，可想而知是各种回调。我们在使用cat echo等工具(read()/write()系统调用)进行读写sysfs中相应驱动的属性时，其实就是回调驱动的show()和store()。
+
+
+open、write等产生系统调用进入内核，
+通过sys的用户属性接口，从dev_sysfs_ops或者bus_sysfs_ops，或者driver_sysfs_ops进入，调用对应的*_attr_show或者 *_attr_store，然后如下宏函数
+static DEVICE_ATTR_RW(sriov_numvfs)被触发，最终执行sriov_numvfs_store等函数，
+
+sriov_numvfs_store 这个函数能判断设备是否支持SRIOV
+在这个函数内，会执行ret = pdev->driver->sriov_configure(pdev, 0);
+这会调到驱动，
+往num_vfs写0就是disable 然后调用对应驱动里的sriov_configure函数指针sriov_configure，进入到igb_pci_sriov_configure函数执行，再调用igb_pci_enable_sriov
+-> igb_enable_sriov
+-> pci_enable_sriov 这个函数在drivers/pci/iov.c
+执行完毕，函数igb_enable_sriov还会调用igb_vf_configure对vf进行配置
+pci_enable_sriov函数会调用sriov_enable
+
+### SRIOV字段描述
+
+> 00h 低16位  扩展能力ID：sriov就是10h
+> 00h 中4位   能力版本，这个有pci-sig决定  4位，我所看的pcie4.0手册规定这里必须是1
+> 00h 高12位  下一个能力的offset，
+> 04h SRIOV能力，migration、ARI等bit位的使能
+> 08h SRIOV Control 这里有VF使能、MSE使能等各种使能控制位
+> 0ah SRIOV State 这里主要是一个VF migration状态，
+> 0ch InitialVFs  常用 
+> 0eh TotalVFs
+> 10h NumVFs
+> 14h First VF Offset
+> 16h VF Stride
+> 1Ah VF Device ID
+> 1Ch Supported Page Sizes
+> 20h System Page Size
+> 24h VF BAR0
+。。。
+
+
+
+> VF offset和VF Stride这两个是路由偏移量,这两个值会受到NumVFs的影响
+
+### 其他事项
+VF的路由算法
+VF1的路由ID：（PF路由ID + First VF Offset） mod 2^16
+VF2的路由ID：（PF路由ID + First VF Offset + VF Stride） mod 2^16
+VFn的路由ID：（PF路由ID + First VF Offset + (n-1)*VF Stride） mod 2^16
+VF NumVFs的路由ID：（PF路由ID + First VF Offset + (NumVFs-1)*VF Stride） mod 2^16
+这里以2^16为基，我猜测是由于B：D：F一共16bit的表示有关，生成的VF不能超过这个范围
+
+
+SRIOV的扩展能力ID是0010h
 
 ```
 ```
 在调试驱动，或驱动涉及一些参数的输入输出时，难免需要对驱动里的某些变量或内核参数进行读写，或函数调用。此时sysfs接口就很有用了，它可以使得可以在用户空间直接对驱动的这些变量读写或调用驱动的某些函数。
 
+
+
 ### 问题：
-+ 
+
+
+参考 ：
+https://blog.csdn.net/Runner_Linux/article/details/107109011
