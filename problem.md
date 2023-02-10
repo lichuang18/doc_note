@@ -12,4 +12,4 @@
 + 5. TAS（Test and Set）与CAS（Compare and Swap），两个重要的硬件同步指令,   这里的硬件怎么理解？不都是指令吗，感觉像是C语言，难道说这是类似于add（）这种？
 + 6. 问小杨哥，redis的完整流程，起了个。exe，然后呢，http://javainterview.gitee.io/luffy/2021/08/19/06-Redis/02.%20Redis%E6%8C%81%E4%B9%85%E5%8C%96/
 
-+ 7. 怎么样对github的project进行改动，把它变成自己的东西，整理整理写出像样的文档
++ 7. 怎么样对github的project进行改动，把它变成自己的东西，整理整理写出像样的文章
