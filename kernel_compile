@@ -12,6 +12,9 @@
     make dr
     make dnvme 甄姬穿透，好名字
 
+    cgdb -q -x gdbinit
+    ctrl+a xt退出qemu
+
 2.1 安装qemu
     参考https://www.qemu.org/download/
     wget https://download.qemu.org/qemu-8.0.0-rc1.tar.xz
@@ -19,4 +22,5 @@
     cd qemu-8.0.0-rc1
     ./configure --target-list=x86_64-softmmu  不指定x86的话 会把所有的模拟器都配置，make时间过长
     make
+
 
