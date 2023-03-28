@@ -1,0 +1,22 @@
+1.下载内核源码
+    git clone git@github.com:torvalds/linux.git
+    git tag查看可选的tag版本
+    git checkout tag-version 切换对应的内核版本
+    当然也可以直接下载对应版本的release源码包，下载时间更快
+
+2.下载调试包
+    git clone git@github.com:lichuang18/debug_kernel.git
+    cd debug_kernel
+    make mad
+    make gdk
+    make dr
+    make dnvme 甄姬穿透，好名字
+
+2.1 安装qemu
+    参考https://www.qemu.org/download/
+    wget https://download.qemu.org/qemu-8.0.0-rc1.tar.xz
+    tar xvJf qemu-8.0.0-rc1.tar.xz
+    cd qemu-8.0.0-rc1
+    ./configure --target-list=x86_64-softmmu  不指定x86的话 会把所有的模拟器都配置，make时间过长
+    make
+
