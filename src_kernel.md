@@ -58,3 +58,26 @@ struct request存放的cmd_flags就是bio的opf，里面包含struct request_que
 
 dump_stack();  这玩意能打印出来内核调用栈
 
+
+系统调用
+ksys_write                                                                                          fs/read_write.c  
+    vfs_write                                                                                       fs/read_write.c            
+        new_sync_write                                                                              fs/read_write.c
+            call_write_iter                                                                         include/linux/fs.h
+                file->f_op->write_iter  //                                                          include/linux/fs.h
+                    blkdev_write_iter      //   对于block设备的IO流， 调到由file_operations def_blk_fops定义的blkdev_write_iter   block/fops.c
+                    __generic_file_write_iter                                                       mm/filemap.c
+                        generic_file_direct_write                                                   mm/filemap.c
+                            mapping->a_ops->direct_IO    会调用到def_blk_aops，然后调用direct_IO，def_blk_aops是由bdev_alloc函数赋值  mm/filemap.c
+                                blkdev_direct_IO                                                        block/fops.c
+                                    __blkdev_direct_IO_async                                            block/fops.c
+                                        submit_bio                                                      block/blk-core.c
+                                            submit_bio_noacct    block/blk-core.c
+                                                submit_bio_noacct_nocheck                               block/blk-core.c
+                                                    __submit_bio_noacct_mq  或  __submit_bio_noacct     block/blk-core.c
+                                                        __submit_bio()                                  block/blk-core.c
+                                                            disk->fops->submit_bio(bio)
+                                                                md_submit_bio        这里是md设备所以会走到md设备的md_ops，且md设备支持submit_bio的方法   drivers/md/md.c
+                                                                    md_handle_request
+                                                                        mddev->pers->make_request
+                                                                            raid5_make_request
