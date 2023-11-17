@@ -42,6 +42,29 @@ ksys_write                                                                      
 		.last = last,
 	};
 
+SCSI设备IO调用栈以及SCSI驱动初始化
+
+IO调用栈
+__blk_mq_issue_directly    块设备
+    ->q->mq_ops->queue_rq()
+        ->scsi_queue_rq()         scsi_lib.c的文件
+            ->scsi_dispatch_cmd() scsi_lib.c的文件
+
+驱动初始化
+megasas_probe_one
+    ->scsi_host_alloc 为主机适配器分配数据结构
+    ->megasas_io_attach  将驱动关联到scsi mid
+        ->scsi_add_host   将scsi_host公开给scsi mid
+
+
+
+
+
+
+
+
+
+scsi_dispatch_cmd
 
 这个是内核里识别盘符
     char* disk_name = NULL;
