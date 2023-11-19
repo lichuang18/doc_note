@@ -36,11 +36,54 @@ ksys_write                                                                      
                                                                     __blk_mq_try_issue_directly         block/blk-mq.c
                                                                         __blk_mq_issue_directly         block/blk-mq.c
                                                                             q->mq_ops->queue_rq         block/blk-mq.c
+    
+    SCSI设备走的分支   scsi_mq_ops  这里是RAID卡的RAID  IO路线   
++ scsi_queue_rq()
+  + ->scsi_dispatch_cmd()
+    + ->.queuecommand = megasas_queue_command  这里调的是scsi_host_template，RAID卡
+      + ->megasas_queue_command()
+        + ->instance->instancet->build_and_issue_cmd(instance, scmd);   在megasas_init_fw初始化函数中，对于不同类别的RAID卡，对instance赋值也不同，93 94 95系列使用的fusion，dell perc5是MFI
+          + ->megasas_build_and_issue_cmd_fusion()  基本上博通的卡，都是走的fusion的路   
+            + ->megasas_build_io_fusion()
+              + ->megasas_build_ldio_fusion()
+                + ->MR_BuildRaidContext()     对于iMR，RAID计算使用主机内存，这里
+                  + ->mr_get_phy_params_r56_rmw() 
+            + ->megasas_fire_cmd_fusion()  发送命令给固件
+
+
+ RAID卡的JBOD模式  路线
++ scsi_queue_rq()
+  + ->scsi_dispatch_cmd()
+    + ->.queuecommand = megasas_queue_command  这里调的是scsi_host_template，RAID卡
+      + ->megasas_queue_command()
+        + ->instance->instancet->build_and_issue_cmd(instance, scmd);   在megasas_init_fw初始化函数中，对于不同类别的RAID卡，对instance赋值也不同，93 94 95系列使用的fusion，dell perc5是MFI
+          + ->megasas_build_and_issue_cmd_fusion()  基本上博通的卡，都是走的fusion的路   
+            + ->megasas_build_io_fusion()
+              + ->megasas_build_syspd_fusion()
+            + ->megasas_fire_cmd_fusion()  发送命令给固件
+
+
+
+ 
+ + megasas_build_and_issue_cmd    xscale(dell和其他)  ppc  skinny  gen2
+   + megasas_build_ldio() 
+     + MFI_CMD_LD_WRITE赋值
+
+
+ + 
+
+
+
+    
+    nvme设备走的分支
     nvme_queue_rq接到的数据就是下面的bd这个结构体
     struct blk_mq_queue_data bd = {
 		.rq = rq,
 		.last = last,
 	};
+
+
+
 
 SCSI设备IO调用栈以及SCSI驱动初始化
 
@@ -55,12 +98,6 @@ megasas_probe_one
     ->scsi_host_alloc 为主机适配器分配数据结构
     ->megasas_io_attach  将驱动关联到scsi mid
         ->scsi_add_host   将scsi_host公开给scsi mid
-
-
-
-
-
-
 
 
 
