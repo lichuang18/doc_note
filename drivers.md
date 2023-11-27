@@ -60,6 +60,23 @@ init_sd()
                           + 最终调到驱动的probe函数 
 
 + 2. 设备向总线注册，
+起始点暂未清楚，下面是以VMD内核代码为流程展开的调用追踪
+  + vmd_probe()
+    + -> vmd_enable_domain()
+      + -> pci_create_root_bus()
+      + -> pci_bus_add_devices()
+        + -> pci_bus_add_device()
+          + -> device_attach()
+            + -> __device_attach()
+              + -> bus_for_each_drv(dev->bus, NULL, &data,__device_attach_driver);   调用到 __device_attach_driver()
+                + -> driver_match_device()
+                + -> driver_probe_device()
+                  + -> __driver_probe_device()
+                    + -> really_probe()
+                      + -> call_driver_probe()
+                        + ->ret = dev->bus->probe(dev);
+                          + 或者->ret = drv->probe(dev);
+                            + 最终调到驱动的probe函数 
 
 （待补充）
 
