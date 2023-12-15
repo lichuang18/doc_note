@@ -63,3 +63,17 @@ brctl showstp br0                   # 显示 br0 的各个接口
 
 
 -net nic -net tap,ifname=tap0,script=no,downscript=no  启动
+
++ pci设备直通
+
+ 需要开启iommu，开启步骤如下：
+    
+    
+ 然后需要将需要直通的pci设备解绑驱动，并把该设备绑定到vfio
+    解绑：
+        cd /sys/bus/pci/drivers/nvme 
+        echo -n 0000:03:00.0 > unbind
+    绑定到vfio
+        查看需要直通的pci设备的vendor ID和device ID
+        echo xxxx:xxxx > /sys/bus/pci/drivers/vfio-pci/new_id
+        
